@@ -36,7 +36,7 @@ static const char connClosePart[] PROGMEM = "\r\nConnection:Close\r\n\r\n";
 #define DOUT  4
 #define SCK   5
 const float scaleFactor = 103.44f;
-const long scaleOffset = 94834;//109910;
+const long scaleOffset = 94834;
 
 //DS18x20
 #define DSPIN           14
