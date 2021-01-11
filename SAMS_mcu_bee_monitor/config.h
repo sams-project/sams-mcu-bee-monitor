@@ -27,7 +27,7 @@ static const char connClosePart[] PROGMEM = "\r\nConnection:Close\r\n\r\n";
 #define DHT_ENABLED   1
 #define SCALE_ENABLED 1
 #define DS18_ENABLED  1
-#define BAT_ENABLED   0
+#define BAT_ENABLED   1
 //------------------------------------------
 
 //----------Sensor related configs----------
@@ -38,8 +38,8 @@ static const char connClosePart[] PROGMEM = "\r\nConnection:Close\r\n\r\n";
 //HX711
 #define DOUT  4
 #define SCK   5
-const float scaleFactor = 103.44f;
-const long scaleOffset = 94834;
+const float scaleFactor = ;
+const long scaleOffset = ;
 
 //DS18x20
 #define DSPIN           14
