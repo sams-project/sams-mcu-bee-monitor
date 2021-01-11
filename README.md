@@ -15,7 +15,8 @@ Besides the ESP8266 ESP-12E with adapter board, the code has been successfully t
 # Contents of the repository
 The repository consists of two projects:
 * *SAMS_mcu_bee_monitor* - runs the monitoring system, collects sensor data and sends to remote SAMS DW;
-* *LoadCellCalibration* - for load cell calibration.
+* *LoadCellCalibration* - for load cell calibration;
+* *MCU_PCB_files* - PCB related files (BOM and Gerber) for ESP8266 ESP-12E with adapter board.
 
 # Sensors and modules used
 List of sensors and modules that the monitoring system uses:
