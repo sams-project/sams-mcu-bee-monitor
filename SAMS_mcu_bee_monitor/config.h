@@ -3,11 +3,14 @@
 
 #define VERSION_NUM "version 1.0"
 
+//Sleep time in seconds
+#define SLEEPTIME 60
+
 //WiFi credentials
 static const char ssid[] PROGMEM = "";
 static const char pwd[] PROGMEM = "";
 
-//auth0
+//Device credentials
 static const char client_id[] PROGMEM = "";
 static const char secret[] PROGMEM = "";
 

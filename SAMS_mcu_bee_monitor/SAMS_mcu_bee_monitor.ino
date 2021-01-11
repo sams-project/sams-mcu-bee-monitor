@@ -8,7 +8,6 @@
 #include "config.h"
 
 #define TOKENLENGTH 350
-#define SLEEPTIME 60 //seconds
 //Sensor count without 1-wire
 #define INDIVIDUALSENSORS 4 //DHT22(temp & hum), HX711(load cell), battery voltage
 
@@ -272,7 +271,6 @@ int8_t prepareAllData() {
 }
 
 int sendToDWH(char tokenRTC[]) {
-  //The size should be determined automatically from sensor count - number of array elements, objects, members per object
   //Size can be calculated also here: https://arduinojson.org/v6/assistant/
   DynamicJsonDocument jsonDoc(1024);
   uint8_t arrLength = sizeof(sensors) / sizeof(SAMSSensor);
@@ -345,6 +343,7 @@ void sendLog(char tokenRTC[]) {
 }
 
 void shutdownWiFi() {
+  //Power consumption reduction suggestions: https://www.bakke.online/index.php/2017/05/21/reducing-wifi-power-consumption-on-esp8266-part-1/
   WiFi.mode( WIFI_OFF );
   WiFi.forceSleepBegin();
   delay(1);
@@ -370,7 +369,6 @@ void gotoSleep() {
   ESP.deepSleep(SLEEPTIME * 1000000, WAKE_RF_DISABLED);
 }
 
-//Power consumption reduction suggestions: https://www.bakke.online/index.php/2017/05/21/reducing-wifi-power-consumption-on-esp8266-part-1/
 void setup() {
   shutdownWiFi();
 
