@@ -1,7 +1,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define VERSION_NUM "version 1.0"
+#define VERSION_NUM "version 1.2"
 
 //Sleep time in seconds
 #define SLEEPTIME 60
@@ -19,8 +19,15 @@ const int httpsPort = 443;
 static const char host[] PROGMEM = "sams.science.itf.llu.lv";
 
 //Request strings
+static const char grantType[] PROGMEM = "client_credentials";
+static const char audience[] PROGMEM = "sams-dwh-web-api";
+static const char apiHost[] PROGMEM = "POST /api/data HTTP/1.1\r\nHost:";
+static const char apiLogs[] PROGMEM = "POST /api/logs HTTP/1.1\r\nHost:";
+static const char apiToken[] PROGMEM = "POST /api/token HTTP/1.1\r\nHost:";
+static const char apiConfig[] PROGMEM = "GET /api/configs/device HTTP/1.1\r\nHost:";
 static const char acceptPart[] PROGMEM = "\r\nAccept:application/json\r\nContent-Length:";
-static const char contentTypePart[] PROGMEM = "\r\nContent-Type:application/json\r\nAuthorization: Bearer ";
+static const char contentTypePart[] PROGMEM = "\r\nContent-Type:application/json";
+static const char bearerPart[] PROGMEM = "\r\nAuthorization: Bearer ";
 static const char connClosePart[] PROGMEM = "\r\nConnection:Close\r\n\r\n";
 
 //----------Enabled sensors-----------------

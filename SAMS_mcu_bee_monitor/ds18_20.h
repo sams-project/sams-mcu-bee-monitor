@@ -11,7 +11,7 @@
 struct DsSensor {
   uint8_t code[8];
   uint8_t scratchPad[9];
-  uint8_t codeHex[16];
+  char codeHex[17]; //NULL terminated
   float value;
   uint8_t up;
   uint8_t registered;
@@ -40,6 +40,7 @@ class DS18OneWire
     int8_t measureOneSensor(DsSensor* index);
     float getTemperature10(int* temp_read, uint8_t temp[]);
     float getTemperature28(int* temp_read, uint8_t temp[]);
+    void convertHexToString(uint8_t arr[], char result[]);
   public:
     DS18OneWire(int8_t pin, int8_t sensorCount);
     void registerDsSensors(DsSensor* dsSensors);
