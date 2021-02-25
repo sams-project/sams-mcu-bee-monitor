@@ -271,6 +271,7 @@ void DS18OneWire::registerDsSensors(DsSensor* dsSensors) {
   int breakInfinity = _sensorCount * 2;
   while (!done && indx != _sensorCount) {
     if (DS_Search_ROM(&done, &lastConflict, dsSensors[indx].code)) {
+      convertHexToString(dsSensors[indx].code, dsSensors[indx].codeHex);
       dsSensors[indx].registered = 1;
       ++indx;
     }
@@ -361,4 +362,33 @@ float DS18OneWire::getTemperature28(int* temp_read, uint8_t temp[]) {
   }
 
   return rez;
+}
+
+//Converts 1-wire sensor code to hex chars
+void DS18OneWire::convertHexToString(uint8_t arr[], char result[])
+{
+  uint8_t hex = 0;
+  int8_t k = 4;
+  int8_t indx = 0;
+  int8_t asciiOffset = 0;
+  for (int8_t i = 0; i < 8; i++) {
+    k = 4;
+    for (int8_t j = 7; j >= 0; j--) {
+      uint8_t mask = 1 << j;
+      uint8_t masked_num = arr[i] & mask;
+      uint8_t shiftedBit = masked_num >> k;
+      hex |= (shiftedBit);
+      if (j == 4 || j == 0) {
+        if (hex >= 0 && hex <= 9) {
+          asciiOffset = 48;
+        } else {
+          asciiOffset = 87;
+        }
+        result[indx++] = hex + asciiOffset;
+        k = 0;
+        hex = 0;
+      }
+    }
+  }
+  result[indx] = '\0';
 }
