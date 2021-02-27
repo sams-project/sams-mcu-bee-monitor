@@ -1,10 +1,10 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define VERSION_NUM "version 1.2"
+#define VERSION_NUM "v1.2"
 
 //Sleep time in seconds
-#define SLEEPTIME 60
+#define SLEEPTIME 300
 
 //WiFi credentials
 static const char ssid[] PROGMEM = "";

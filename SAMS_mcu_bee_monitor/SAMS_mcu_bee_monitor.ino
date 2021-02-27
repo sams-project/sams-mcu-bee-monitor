@@ -189,6 +189,19 @@ int8_t prepareAllData() {
 }
 
 //------------REQUESTS----------------
+void sendRequestPart(WiFiClientSecure & secureClient, char tokenRTC[], size_t jsonLength, bool bearer) {
+  secureClient.print(FPSTR(host));
+  secureClient.print(F(":"));
+  secureClient.print(httpsPort);
+  secureClient.print(FPSTR(acceptPart));
+  secureClient.print(jsonLength);
+  secureClient.print(FPSTR(contentTypePart));
+  if (bearer) {
+    secureClient.print(FPSTR(bearerPart));
+    secureClient.print(tokenRTC);
+  }
+  secureClient.print(FPSTR(connClosePart));
+}
 
 int8_t requestToken(char* tokenRTC) {
   StaticJsonDocument<256> doc;
@@ -205,7 +218,9 @@ int8_t requestToken(char* tokenRTC) {
 
   secureClient.print(FPSTR(apiToken));
   sendRequestPart(secureClient, "", measureJson(doc), false);
-  serializeJson(doc, secureClient);
+  char payload[measureJson(doc) + 1];
+  serializeJson(doc, payload, sizeof(payload));
+  secureClient.print(payload);
 
   char serverResp[16] = {0};
   secureClient.readBytesUntil('\r', serverResp, sizeof(serverResp));
@@ -230,7 +245,7 @@ int8_t requestToken(char* tokenRTC) {
     return 0;
   }
 
-  strncpy(tokenRTC, jsonDoc["access_token"].as<char*>(), TOKENLENGTH);
+  snprintf(tokenRTC, TOKENLENGTH, "%s", jsonDoc["access_token"].as<char *>());
 
   return 1;
 }
@@ -253,10 +268,13 @@ int sendToDWH(char tokenRTC[]) {
   int16_t statusCode = -1;
   WiFiClientSecure secureClient;
   secureClient.setInsecure();
+
   if (secureClient.connect(FPSTR(host), httpsPort)) {
     secureClient.print(FPSTR(apiHost));
     sendRequestPart(secureClient, tokenRTC, measureJson(jsonDoc), true);
-    serializeJson(jsonDoc, secureClient);
+    char payload[measureJson(jsonDoc) + 1];
+    serializeJson(jsonDoc, payload, sizeof(payload));
+    secureClient.print(payload);
 
     char serverResp[16] = {0};
     secureClient.readBytesUntil('\r', serverResp, sizeof(serverResp));
@@ -276,20 +294,20 @@ int sendToDWH(char tokenRTC[]) {
 void getRSSI(char signalStr[], uint8_t arrSize) {
   int32_t rssi = WiFi.RSSI();
   if (rssi >= 0) {
-    strncpy(signalStr, "N/A", arrSize);
+    snprintf(signalStr, arrSize, "%s", "N/A");
   } else  if (rssi > -60 && rssi < 0)  {
-    strncpy(signalStr, "Excellent", arrSize);
+    snprintf(signalStr, arrSize, "%s", "Excellent");
   }  else if (rssi > -70 && rssi <= -60)  {
-    strncpy(signalStr, "Very good", arrSize);
+    snprintf(signalStr, arrSize, "%s", "Very good");
   }  else if (rssi > -80 && rssi <= -70)  {
-    strncpy(signalStr, "OK", arrSize);
+    snprintf(signalStr, arrSize, "%s", "OK");
   }  else {
-    strncpy(signalStr, "Not good", arrSize);
+    snprintf(signalStr, arrSize, "%s", "Not good");
   }
 }
 
 uint8_t sendLog(char tokenRTC[]) {
-  char signalStr[11] = {0};
+  char signalStr[11];
   getRSSI(signalStr, sizeof(signalStr));
   char logMessage[32] = {0};
   snprintf(logMessage, sizeof(VERSION_NUM) + strlen("; Signal: ") + strlen(signalStr), "%s%s%s", VERSION_NUM, "; Signal: ", signalStr);
@@ -304,7 +322,10 @@ uint8_t sendLog(char tokenRTC[]) {
   if (secureClient.connect(FPSTR(host), httpsPort)) {
     secureClient.print(FPSTR(apiLogs));
     sendRequestPart(secureClient, tokenRTC, measureJson(doc), true);
-    serializeJson(doc, secureClient);
+
+    char payload[measureJson(doc) + 1];
+    serializeJson(doc, payload, sizeof(payload));
+    secureClient.print(payload);
 
     char serverResp[16] = {0};
     secureClient.readBytesUntil('\r', serverResp, sizeof(serverResp));
@@ -316,20 +337,6 @@ uint8_t sendLog(char tokenRTC[]) {
   }
 
   return statusCode;
-}
-
-void sendRequestPart(WiFiClientSecure & secureClient, char tokenRTC[], size_t jsonLength, bool bearer) {
-  secureClient.print(FPSTR(host));
-  secureClient.print(F(":"));
-  secureClient.print(httpsPort);
-  secureClient.print(FPSTR(acceptPart));
-  secureClient.print(jsonLength);
-  secureClient.print(FPSTR(contentTypePart));
-  if (bearer) {
-    secureClient.print(FPSTR(bearerPart));
-    secureClient.print(tokenRTC);
-  }
-  secureClient.print(FPSTR(connClosePart));
 }
 //-----------------------------------
 
@@ -349,16 +356,21 @@ void wakeWiFi() {
   WiFi.begin(FPSTR(ssid), FPSTR(pwd));
 }
 
-uint8_t connectWiFi() {
+void connectWiFi() {
   int8_t wifiCounter = 0;
   //If can't connect to router, force sleep
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     if (wifiCounter++ > 20) {
-      return 0;
+      gotoSleep();
     }
   }
-  return 1;
+}
+
+void disconnectWiFi()
+{
+  WiFi.disconnect(true);
+  delay(1);
 }
 
 void registerRTCVariables(char tokenRTC[], int arrSize, uint8_t &sendFirstLog) {
@@ -374,11 +386,27 @@ void gotoSleep() {
   ESP.deepSleep(SLEEPTIME * 1000000, WAKE_RF_DISABLED);
 }
 
+//For debug purposes
+void printData() {
+  uint8_t arrLength = sizeof(sensors) / sizeof(SAMSSensor);
+  for (uint8_t i = 0; i < arrLength; i++) {
+    if (sensors[i].canSend) {
+      Serial.print(sensors[i].typeName);
+      Serial.print(F(" | "));
+      Serial.println(sensors[i].value);
+    }
+  }
+}
+
 void setup() {
   shutdownWiFi();
+  //Uncomment for debug purposes
+  //Serial.begin(115200);
+  //Serial.println();
 
-  char tokenRTC[TOKENLENGTH] = {0};
-  uint8_t sendFirstLog = 0;
+  char tokenRTC[TOKENLENGTH];
+  uint8_t sendFirstLog;
+  uint8_t rtcHasData = 0;
 
   //Init sensors
   if (DHT_ENABLED) {
@@ -390,6 +418,7 @@ void setup() {
   }
 
   registerRTCVariables(tokenRTC, sizeof(tokenRTC), sendFirstLog);
+  rtcHasData = rtcState.loadFromRTC();
 
   //Check, why reset happened
   rst_info *resetInfo;
@@ -399,7 +428,6 @@ void setup() {
   if (resetInfo->reason == 0 || resetInfo->reason == 6) {
     //First run, some delay for sensor warm-up, send log
     sendFirstLog = 1;
-    rtcState.saveToRTC();
     //Read 1-wire sensors, to perform temp. conversion after power-up
     if (DS18_ENABLED) {
       ds.registerDsSensors(dsSensors);
@@ -410,41 +438,38 @@ void setup() {
   }
 
   startMeasure();
-  
+
   if (prepareAllData()) {
+    //Uncomment for debug purposes
+    //printData();
     wakeWiFi();
+    connectWiFi();
 
-    
-    if (!connectWiFi()) {
-      //Can't connect, force sleep
-      gotoSleep();
+    if (!rtcHasData) {
+      if (!requestToken(tokenRTC))
+      {
+        disconnectWiFi();
+        gotoSleep();
+      }
+      sendFirstLog = 1;
     }
 
-    if (rtcState.loadFromRTC()) {
-      //Send data to DW and check response
-      if (sendToDWH(tokenRTC) == 401) {
-        //Probably token expired, request new one
-        if (requestToken(tokenRTC)) {
-          //Try sending again
-          sendToDWH(tokenRTC);
-        }
-      }
-
-      //Send log if device had power reboot
-      if (sendFirstLog) {
-        if (sendLog(tokenRTC)) {
-          sendFirstLog = 0;
-        } else {
-          sendFirstLog = 1;
-        }
+    //Send data to DW and check response
+    if (sendToDWH(tokenRTC) == 401) {
+      //Probably token expired, request new one
+      if (requestToken(tokenRTC)) {
+        //Try sending again
+        sendToDWH(tokenRTC);
       }
     }
 
-    WiFi.disconnect(true);
-    delay(1);
-    rtcState.saveToRTC();
+    //Send log if device had power reboot
+    if (sendFirstLog) {
+      sendFirstLog = !sendLog(tokenRTC);
+    }
+    disconnectWiFi();
   }
-
+  rtcState.saveToRTC();
   gotoSleep();
 }
 
