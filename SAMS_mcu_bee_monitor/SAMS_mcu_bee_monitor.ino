@@ -309,7 +309,7 @@ void getRSSI(char signalStr[], uint8_t arrSize) {
 uint8_t sendLog(char tokenRTC[]) {
   char signalStr[11];
   getRSSI(signalStr, sizeof(signalStr));
-  char logMessage[32] = {0};
+  char logMessage[33];
   snprintf(logMessage, sizeof(VERSION_NUM) + strlen("; Signal: ") + strlen(signalStr), "%s%s%s", VERSION_NUM, "; Signal: ", signalStr);
 
   StaticJsonDocument<64> doc;
