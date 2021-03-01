@@ -1,7 +1,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
-#define VERSION_NUM "v1.2"
+#define VERSION_NUM "SAMS v1.2"
 
 //Sleep time in seconds
 #define SLEEPTIME 300
