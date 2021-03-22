@@ -15,6 +15,7 @@ int8_t startCalibrate = 0;
 int8_t inputWeight = 0;
 
 float scaleFactor = 1.0f;
+long scaleOffset=1;
 
 void resetScale(float value) {
   hxScale.set_scale(value);
@@ -25,14 +26,16 @@ void calibrateScale() {
   float sum = 0.0f;
   int8_t times = 10;
   for (int8_t i = 0; i < times; i++) {
-    long rawWeight = hxScale.get_value(10);
+    long rawWeight = hxScale.get_value(1);
     sum += (rawWeight / calWeight);
     Serial.print(F("."));
+    delay(500);
   }
   scaleFactor = sum / times;
+  scaleOffset = hxScale.get_offset();
   Serial.println();
   Serial.print(F("Offset: "));
-  Serial.print(hxScale.get_offset());
+  Serial.print(scaleOffset);
   Serial.print(F(" ScaleFactor: "));
   Serial.println(scaleFactor);
   Serial.println(F("Calibration finished. Remove weight!"));
@@ -92,9 +95,11 @@ void loop() {
     else if (input == "3") {
       startMeasure = 1;
       resetScale(scaleFactor);
+      hxScale.set_offset(scaleOffset);
       Serial.println();
       Serial.print(F("Offset: "));
-      Serial.print(hxScale.get_offset());
+//      Serial.print(hxScale.get_offset());
+      Serial.print(scaleOffset);
       Serial.print(F(" ScaleFactor: "));
       Serial.println(scaleFactor);
     }
